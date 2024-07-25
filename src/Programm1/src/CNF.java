@@ -10,7 +10,9 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class CNF {
@@ -18,6 +20,8 @@ public class CNF {
 	
 	List<Clauses> cList= new ArrayList<>();
     List<Variables> vList=new ArrayList<>();
+    //尝试简化查找vlist
+    Map<Integer, Variables> variableMap = new HashMap<>();
 	
 	
 	public int numc;//number of clauses
@@ -27,11 +31,16 @@ public class CNF {
 	public File file;
 	
 	public Graph nodeGraph;
-	public boolean Sat;
+	private boolean Sat;
+	private boolean walkSat;
+	public boolean walked;
+	public boolean set;
 	
-	//不用文件，直接生成的构造方法
+	//不用文件，直接生成的构造方法,注意这个使用的不是walkSAT
 	public CNF(int nVariables, int mClauses) {
 		
+		this.walked=false;
+		this.set=false;
 		//新建两个list
         this.cList=new ArrayList<>();
         this.vList=new ArrayList<>();
@@ -68,7 +77,7 @@ public class CNF {
           	 
         }
         
-        setSAT();
+        //setSAT();
 		
 	}
 	
@@ -76,7 +85,7 @@ public class CNF {
 	public CNF(File f) {
 		
 		readFile(f);
-		setSAT();
+		//setSAT();
 		
 	}
       
@@ -97,6 +106,8 @@ public class CNF {
 	        //新建两个list
 	        this.cList=new ArrayList<>();
 	        this.vList=new ArrayList<>();
+	        this.walked=false;
+	        this.set=false;
    	 
    	 try (BufferedReader reader = new BufferedReader(new FileReader(f))) {
    		   int clauseNum=0;
@@ -212,8 +223,8 @@ public class CNF {
    	 v.addClauses(c); 
     }
     
-       //给出绝对值，查找list里有没有对应num的var，如果有返回它，如果没有，新建它并加入list并返回它
-       public Variables findOrCreateV(int num)
+       //给出绝对值，查找list里有没有对应num的var，如果有返回它，如果没有，新建它并加入list并返回它 旧方法时间复杂度太高
+       public Variables findOrCreateVOld(int num)
     {
    	 for (Variables item : vList) {
             if (item.getNum()==num) {
@@ -226,7 +237,20 @@ public class CNF {
    	 return newv;
     }
 
-     //实验并设置是否能被满足
+     
+       //新的方法，使用hashmap看变量是否已经存在且加入了list
+       public Variables findOrCreateV(int num) {
+           Variables var = variableMap.get(num);
+           if (var == null) {
+               var = new Variables();
+               var.setNum(num);
+               variableMap.put(num, var);
+               vList.add(var);
+           }
+           return var;
+       }
+       
+       //实验并设置是否能被满足
      public void setSAT()
        {
     	   nodeGraph = new Graph(numc, maxv);//不能使用vlist的size，因为有的var没有被使用到，vlistsize<maxv
@@ -239,6 +263,22 @@ public class CNF {
                Sat= false;
            }
        }
+     
+     public void walkSAT()
+     {
+    	 WalkSAT ws= new WalkSAT(this.cList,this.vList);
+    	 if (ws.solve()) {
+             /*System.out.println("SAT problem is satisfiable.");
+             for (Variables var : variableList) {
+                 System.out.println("Variable " + var.getNum() + ": " + var.getValue());
+             }*/
+    		 this.walkSat=true;
+         } else {
+             //System.out.println("SAT problem is not satisfiable.");
+        	 this.walkSat=false;
+         }
+    	 this.walked=true;
+     }
        
      //打印数值
      public void printValues()
@@ -252,7 +292,20 @@ public class CNF {
 
      public boolean getSAT()
      {
+    	if(!this.set)
+    	{
+    		setSAT();
+    	}
     	 return Sat;
+     }
+     
+     public boolean getWalkSAT()
+     {
+    	 if(!this.walked )
+    	 {
+    		 walkSAT();
+    	 }
+    	 return this.walkSat;
      }
 
 

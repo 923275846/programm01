@@ -1,15 +1,19 @@
 package Programm1.src;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.category.DefaultCategoryDataset;
-import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+
+import javax.swing.JFrame;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
 
 
 public class ChartGenerator {
@@ -55,7 +59,16 @@ public class ChartGenerator {
 	                PlotOrientation.VERTICAL,
 	                true, true, false);
 	        
-	        
+	        // Adjust X-axis tick unit (interval)
+	        CategoryPlot plot = (CategoryPlot) lineChart.getPlot();
+	        CategoryAxis xAxis = plot.getDomainAxis();
+
+	        // Calculate interval to display approximately 10 labels
+	        int totalItems = dataset.getColumnCount();
+	        int interval = Math.max(1, totalItems / 10); // Ensure interval is at least 1
+
+	        //dependency不对用不了
+	        //xAxis.setCategoryTickUnit(new CategoryTickUnit(interval));
 	        
 	     
 

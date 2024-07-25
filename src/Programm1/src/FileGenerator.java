@@ -119,6 +119,30 @@ public class FileGenerator {
  		 CNF c= new CNF(f);
  		 return c.getSAT();	   
  	   }
+ 	   
+ 	   public boolean TestWalk(File f) {
+ 		   CNF c=new CNF(f);
+ 		   return c.getWalkSAT();
+ 	   }
+ 	   
+ 	  public void addWalkResult(File f)
+	 	{
+	 		
+	 		boolean b= TestWalk(f);
+	 		try (FileWriter fw = new FileWriter(f, true); // 打开文件追加模式
+	 	             BufferedWriter bw = new BufferedWriter(fw)) {
+
+	 			bw.newLine(); // 写入换行符    
+	 			String lineToAdd = b ? "True" : "False"; // 根据布尔值确定要写入的内容
+	 	            bw.write(lineToAdd); // 写入内容
+	 	            bw.newLine(); // 写入换行符
+	 	            //System.out.println("Successfully appended '" + lineToAdd + "' to the file.");
+	 	            
+	 	        } catch (IOException e) {
+	 	            System.err.println("An error occurred while appending to the file.");
+	 	            e.printStackTrace();
+	 	        }
+	 	}
    
       
  	   //在不写入读取的情况下直接生成m从一定数量开始到一定数量结束的固定v数量的文件的方法
@@ -160,4 +184,41 @@ public class FileGenerator {
  	   {
  		   return newGeneratedFile;
  	   }
+ 	   
+ 	   
+ 	   
+ 	  //同上，但是使用的是walk的概率
+ 	   public void genListWalk(int v, int startingC, int endingC, int interval )
+	   {
+		   
+		   newF("ListOfResults");
+		   try (BufferedWriter writer = new BufferedWriter(new FileWriter(newGeneratedFile, true)))
+		   {     
+			   System.out.println("Variables:"+v+", from "+startingC+" Clauses to "+endingC+" Clauses, interval: "+interval);
+			   writer.write("Variables:"+v+", from "+startingC+" Clauses to "+endingC+" Clauses, interval: "+interval);
+			   writer.newLine();//换行
+		  //省去写入和读取的过程，直接生成并计算一个cnf的可满足性
+ 		   int i=startingC;
+ 		   while(i<=endingC) 		   
+ 		   {
+ 			 writer.write(Integer.toString(i));//写句子数
+ 			 
+ 			 int p=0;//p是可满足的概率
+ 			 for(int j=0;j<100;j++)//尝试100次
+ 			 {
+ 				if( new CNF(v, i).getWalkSAT())/////////////////注意这里是walk
+ 					p++;//当可满足时概率加1
+ 			 }
+ 			 
+ 			 { writer.write(", "+p);}
+	          
+	         writer.newLine();//换行
+ 			 i+=interval;//增加interval
+ 		   }
+		   } catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	   }
+	   
 }

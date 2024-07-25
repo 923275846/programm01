@@ -24,6 +24,8 @@ public class Main {
 	static int numEndingC;
 	static int interval;
 	
+	static int oldOrwalk;
+	
 	
 	static Path filePath;
 	static File generatedFile;
@@ -52,9 +54,24 @@ public class Main {
 			    else if(firstInput==2) {
 			    	
 			    	getRecordArgs(scanner);
+			    	 // 记录开始时间
+			        long startTime = System.currentTimeMillis();
+			        System.out.println("starting");
+			    	
+			    	
+			    	
+			    	
 			    	TestRecord(numVar, numStartingC,numEndingC,interval);
 			    	
+			    	
+			    	
+			    	// 记录结束时间
+			        long endTime = System.currentTimeMillis();
 			    	System.out.println("Finished!");
+			    	
+			    	// 计算并打印运行时间
+			        long elapsedTime = endTime - startTime;
+			        System.out.println("Execution Time: " + elapsedTime + " milliseconds");
 			    }
 			    	
 			    
@@ -169,6 +186,16 @@ public class Main {
 	            scanner.next(); // 清除无效输入
 	        }
 	        
+	        System.out.print("input 1 to use old method and others to use walkSSAT");
+	        if ( scanner.nextInt()==1) {
+	            oldOrwalk=1;
+	        } 
+	        else {
+	        	oldOrwalk=0;
+	        	System.out.println("Use Walk SAT");
+	        }
+	        
+	        
 		   
 	   }
 
@@ -189,11 +216,22 @@ public class Main {
   	            folder.mkdir();
   	        }
   	        
+  	  	    System.out.println("Generating folder");
   	        FileGenerator fg=new FileGenerator(folder);//创建文件编辑器，设定好路径文件夹
   	        
   	        //调用文件编辑器的方法来写高铝列表
-  	        fg.genList(v, startingC, endingC, interval );
-  	        
+  	        if(oldOrwalk==1) {
+  	      	System.out.println("Generating files with old method");
+  	        fg.genList(v, startingC, endingC, interval );}
+  	        else if(oldOrwalk==0) {
+  	        	System.out.println("Generating files with walkSAT");
+  	        	fg.genListWalk(v, startingC, endingC, interval );
+  	        }
+  	        else
+  	        {System.out.println("Error: wrong value for ole or walk!");
+  	        return;
+  	        }
+  	        System.out.println("Generating visual graph");
   	        ChartGenerator cg=new ChartGenerator(fg.returnList());
   	        cg.GenChart();
   	        System.out.println("Finished");

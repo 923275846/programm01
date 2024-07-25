@@ -6,48 +6,73 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 
 public class Graph {
 	
 	static Node[] nodes;
 	static List<Node>[] GraphChart;
+	private int index;
+    private Stack<Node> stack;
+    private List<List<Node>> sccs;
+    //private Map<Node, Integer> nodeToIndex;
+    //private Map<Node, Integer> nodeToLowlink;
+    //private Set<Node> onStack;
+    static Set<Node>[] GraphChartSet;
+    
+    
+    private int[] scc;
+    private int sccCount;
 	
-	@SuppressWarnings("unchecked")
 	public Graph(int cnum, int vnum)
 	{
 		nodes=new Node[2*vnum];
-		GraphChart = (List<Node>[]) new List[2 * vnum];
+		/*GraphChart = (List<Node>[]) new List[2 * vnum];
         for (int i = 0; i < 2 * vnum; i++) {
             GraphChart[i] = new ArrayList<>();
             GraphChart[i].add(null); // 初始化需要占位符
-        }
+        }*/
+		
+	        GraphChartSet = createGraphChart(2 * vnum);
+		 for (int i = 0; i < 2 * vnum; i++) {
+	            GraphChartSet[i] = new HashSet<Node>();  // 明确指定类型参数
+	        }
 		
 	}
+	
+	@SuppressWarnings({ "unused", "unchecked" })
+	private Set<Node>[] createGraphChart(int size) {
+        return (Set<Node>[]) new HashSet[size];
+    }
+
 	
 	
 	public void iniGraph(List<Clauses> cList, List<Variables> vList)
 	{
-		//System.out.println("adding vars");
 		for(Variables v: vList)
 		{
 			addVar(v);//fill nodes
 		}
-		
-		//System.out.println("adding starting nodes");
+
 		for(int j=0; j<nodes.length; j++)
 		{
-			GraphChart[j].add(nodes[j]);//fill the first line of chartgraph把表格的每个列表开头设为对应的node，和nodes里面的序号一致
+			//GraphChart[j].add(nodes[j]);//fill the first line of chartgraph把表格的每个列表开头设为对应的node，和nodes里面的序号一致
+			GraphChartSet[j].add(nodes[j]); // 填充 GraphChart 的第一行
 		}
-		
-		//System.out.println("adding clauses");
+
 		for(Clauses c: cList)
 		{
 			addClause(c);//fill the other lines
 		}
-		
-		//System.out.println("finished generating graph");
+
 	}
 	
 	
@@ -111,22 +136,29 @@ public class Graph {
 		//now need to write down ivminus1->iv2 and ivMinus2->iv1 下面写，第一个node的相反推出第二个node，第二个node的相反推出第一个node
 		//in both the chart and the nodelist of Node 写进chart里，也写进每个node里
 		//for both List<nodes>[ivminus1] and nodesList<nodes>[ivminus2]先查找里面是否已经有对应node了，如果没有，加进去
-		if(!searchNode(GraphChart[ivMinus1], nodes[iv2]));
+		/*if(!searchNode(GraphChart[ivMinus1], nodes[iv2]));
 		{
 			GraphChart[ivMinus1].add(nodes[iv2]);
-			nodes[ivMinus1].addIm(nodes[iv2]);
+			//nodes[ivMinus1].addIm(nodes[iv2]); 不要再使用node的这个im了，只使用这个类里的array of list
 		}
 		
 		if(!searchNode(GraphChart[ivMinus2], nodes[iv1]));
 		{
 			GraphChart[ivMinus2].add(nodes[iv1]);
-			nodes[ivMinus2].addIm(nodes[iv1]);
-		}
+			//nodes[ivMinus2].addIm(nodes[iv1]);
+		}*/
 		
+		
+		
+		// 使用 HashSet 进行检查和添加
+        GraphChartSet[ivMinus1].add(nodes[iv2]);
+        GraphChartSet[ivMinus2].add(nodes[iv1]);
 		
 	}
 	
-	public boolean searchNode(List<Node> list, Node node)
+	//问题：每加一个相反，都遍历一次
+	//极端情况：m的平方？
+	public boolean searchNodeOld(List<Node> list, Node node)
 	{
 		 if (list == null || node == null) {//列表为空或者node为null时，返回无
 	            return false;
@@ -140,48 +172,9 @@ public class Graph {
 	        return false;
 	}
 		
-		
-		
-		
-		/*不再需要查找空位，可以直接插入
-		int next=findNextLeer(GraphChart, ivMinus1);
-		
-        if(next>=0) {
-			GraphChart[ivMinus1][next]=nodes[iv2];
-			System.out.println("graph line"+ivMinus1+"added at"+next +"var "+iv2 );
-		}
-        else
-        {
-        	System.err.println("full");
-        }
-		next=findNextLeer(GraphChart, ivMinus2);
-        if(next>=0) {
-			GraphChart[ivMinus2][next]=nodes[iv1];
-			System.out.println("Graph line"+ivMinus2+"added at"+next+"var "+iv1 );
-		}
-		else
-		{System.err.println("full");}
-		
-		//for both Node ivminus1 and Node ivminus2 use addIm()
-		
-		nodes[ivMinus1].addIm(nodes[iv2]);
-		nodes[ivMinus2].addIm(nodes[iv1]);
-	public int findNextLeer(Node[][] chart, int i)
-	{
-		int l=chart[i].length;
-		for(int j=1; j<l; j++)//start from 1, since the 0 should be the node itself
-		{
-			if(chart[i][j] ==null) {
-				System.out.println("next leer place is "+j);
-				return j;
-			}
-			
-		}
-		return -1;//no leer place
-	}
-	*/
-	
-	
+	public boolean searchNode(Set<Node> set, Node node) {
+        return set != null && node != null && set.contains(node);
+    }
 	
 	public void printChart()
 	{
@@ -227,71 +220,6 @@ public class Graph {
             e.printStackTrace();
         }
     }
-    
-    
-    
-    
-    /*
-    
-    public void goThroughChart()
-    {
-    	for (int i=0; i<nodes.length;i++)
-    	{
-    		if(nodes[i]!=null)
-    		{searchI(i);}
-    	}
-    }
-    
-    //找哪个来着？？？？？？？？？？？？
-    
-    public void searchI(int i) {
-        List<Node> reachableNodes = dfsFromFirstNode(GraphChart, i);
-
-        GraphChart[i].get(0).setRN(reachableNodes);
-    }
-    
-    
-    public static List<Node> dfsFromFirstNode(List<Node>[] chart, int i) {
-        List<Node> reachableNodes = new ArrayList<>();
-        boolean[] visited = new boolean[chart.length];
-        dfs(chart, i, reachableNodes, visited);
-        return reachableNodes;
-    }
-
-    
-    private static void dfs(List<Node>[] chart, int i, List<Node> reachableNodes, boolean[] visited) {
-        if (i < 0 || i >= chart.length || visited[i]) {
-            return;
-        }
-        visited[i] = true;
-
-        Node startNode = chart[i].get(0);
-        reachableNodes.add(startNode);
-
-        for (int j = 1; j < chart[i].size(); j++) {
-            Node nextNode = chart[i].get(j);
-
-            if (nextNode != null) {
-                int nextIndex = findRowIndex(chart, nextNode);
-                if (nextIndex != -1 && !visited[nextIndex]) {
-                    dfs(chart, nextIndex, reachableNodes, visited);
-                } else {
-                    System.err.println("Node not found or already visited: " + nextNode.getNum());
-                }
-            }
-        }
-    }
-    
-    private static int findRowIndex(List<Node>[] chart, Node node) {
-        for (int i = 0; i < chart.length; i++) {
-            if (chart[i].get(0) != null && chart[i].get(0).getNum() == node.getNum()) {
-                return i;
-            }
-        }
-        return -1;
-    }
-    */
-    
     
     
     
@@ -343,42 +271,319 @@ public class Graph {
         return false;
     }
     
-    
-    
     public boolean trysat()
     {
-        for (int i=0; i<nodes.length; i++)
+      
+    	 findSCCs(); // 确保强连通分量已计算并初始化 scc
+    	 
+    	for (int i=0; i<nodes.length; i++)
         {
         	if (i%2==0)
         	{
-        		if((nodes[i]!=null && nodes[i+1]!=null)&&canReach(nodes[i].getNum(), nodes[i+1].getNum()))//from i to not i
-        				{
-        			      if(canReach(nodes[i+1].getNum(), nodes[i].getNum()));//from not i to i, bicycle
-        			      {return false;}
-        			
-        				}
+        		if((nodes[i]!=null && nodes[i+1]!=null)&&(scc[i]==scc[i+1]))//在同一个团块里
+        			      {return false;}			
         	}
-        	/*else
-        	{
-        		if(nodes[i]!=null && nodes[i-1]!=null &&canReach(nodes[i].getNum(), nodes[i-1].getNum() ))
-        		{
-        			if(canReach(nodes[i-1].getNum(),nodes[i].getNum()))//bicycle
-        			{
-        				return false;
-        			}
-        		}
-        	}*/
         }
-        return true;
+        return true; 
+    }
+    
+    /*
+  //找出强关联部分
+    public List<List<Node>> findSCCs1() {
+        index = 0;
+        stack = new Stack<>();
+        sccs = new ArrayList<>();
+        nodeToIndex = new HashMap<>();
+        nodeToLowlink = new HashMap<>();
+        onStack = new HashSet<>();
+
+        for (Node node : nodes) {
+            if (node != null && !nodeToIndex.containsKey(node)) {
+                tarjan(node);
+            }
+        }
+
+        return sccs;
+    }
+用tarjan算法
+    private void tarjan(Node node) {
+        nodeToIndex.put(node, index);
+        nodeToLowlink.put(node, index);
+        index++;
+        stack.push(node);
+        onStack.add(node);
+
+        for (Node neighbor : GraphChart[caculateN(node.getNum())]) {
+            if (neighbor == null) continue;
+
+            if (!nodeToIndex.containsKey(neighbor)) {
+                tarjan(neighbor);
+                nodeToLowlink.put(node, Math.min(nodeToLowlink.get(node), nodeToLowlink.get(neighbor)));
+            } else if (onStack.contains(neighbor)) {
+                nodeToLowlink.put(node, Math.min(nodeToLowlink.get(node), nodeToIndex.get(neighbor)));
+            }
+        }
+
+        if (nodeToLowlink.get(node).equals(nodeToIndex.get(node))) {
+            List<Node> scc = new ArrayList<>();
+            Node w;
+            do {
+                w = stack.pop();
+                onStack.remove(w);
+                scc.add(w);
+            } while (!w.equals(node));
+            sccs.add(scc);
+        }
+    }
+    */
+    
+    
+    private void dfs(Node node, boolean[] visited, List<Node>[] graph, List<Node> scc) {
+        Stack<Node> stack = new Stack<>();
+        stack.push(node);
+
+        while (!stack.isEmpty()) {
+            Node current = stack.pop();
+            int num = caculateN(current.getNum());
+            if (!visited[num]) {
+                visited[num] = true;
+                scc.add(current);
+                for (Node neighbor : graph[num]) {
+                    if (!visited[caculateN(neighbor.getNum())]) {
+                        stack.push(neighbor);
+                    }
+                }
+            }
+        }
     }
     
     
+    public List<List<Node>> findSCCs() {
+    	
+    	 // 先初始化 scc 数组
+        scc = new int[nodes.length];
+        Arrays.fill(scc, -1); // 初始化为-1
+
+        boolean[] visited = new boolean[nodes.length];
+        Stack<Node> stack = new Stack<>();
+
+        //1: 填充栈
+        for (Node node : nodes) {
+            if (node != null && !visited[caculateN(node.getNum())]) {
+                fillOrder(node, visited, stack);
+            }
+        }
+
+        //2: 获取反向图
+        List<Node>[] reversedGraph = getReversedGraph();
+        Arrays.fill(visited, false);
+        sccs = new ArrayList<>();
+        sccCount = 0;
+
+        //3: 处理栈中的节点
+        while (!stack.isEmpty()) {
+            Node node = stack.pop();
+            if (!visited[caculateN(node.getNum())]) {
+                List<Node> sccList = new ArrayList<>();
+                dfs(node, visited, reversedGraph, sccList);
+
+                // 分配强连通分量编号
+                for (Node n : sccList) {
+                    scc[caculateN(n.getNum())] = sccCount;
+                }
+                sccs.add(sccList);
+                sccCount++;
+            }
+        }
+
+        return sccs;
+    }
+
+    private void fillOrder(Node node, boolean[] visited, Stack<Node> stack) {
+        Stack<Node> tempStack = new Stack<>();
+        tempStack.push(node);
+
+        while (!tempStack.isEmpty()) {
+            Node currentNode = tempStack.peek();
+            int num = caculateN(currentNode.getNum());
+
+            if (!visited[num]) {
+                visited[num] = true;
+                boolean pushedAnyNeighbor = false;
+
+                for (Node neighbor : GraphChartSet[num]) {
+                    if (neighbor != null && !visited[caculateN(neighbor.getNum())]) {
+                        tempStack.push(neighbor);
+                        pushedAnyNeighbor = true;
+                    }
+                }
+
+                if (!pushedAnyNeighbor) {
+                    stack.push(tempStack.pop());
+                }
+            } else {
+                stack.push(tempStack.pop());
+            }
+        }
+    }
+
+
+    private List<Node>[] getReversedGraph() {
+        List<Node>[] reversedGraph = new List[GraphChartSet.length];
+        for (int i = 0; i < GraphChartSet.length; i++) {
+            reversedGraph[i] = new ArrayList<>();
+        }
+
+        for (int i = 0; i < GraphChartSet.length; i++) {
+            for (Node node : GraphChartSet[i]) {
+                if (node != null) {
+                    reversedGraph[caculateN(node.getNum())].add(nodes[i]);
+                }
+            }
+        }
+
+        return reversedGraph;
+    }
+
+    /*拓扑排序
+    public List<Node> topologicalSortSCCs() {
+        List<List<Node>> sccs = findSCCs();
+        Map<Node, List<Node>> dag = new HashMap<>();
+        Map<Node, Integer> inDegree = new HashMap<>();
+
+        for (List<Node> scc : sccs) {
+            for (Node node : scc) {
+                dag.putIfAbsent(node, new ArrayList<>());
+                inDegree.putIfAbsent(node, 0);
+                for (Node neighbor : node.getIm()) {
+                    if (!scc.contains(neighbor)) {
+                        dag.get(node).add(neighbor);
+                        inDegree.put(neighbor, inDegree.getOrDefault(neighbor, 0) + 1);
+                    }
+                }
+            }
+        }
+
+        Queue<Node> queue = new LinkedList<>();
+        for (Node node : dag.keySet()) {
+            if (inDegree.get(node) == 0) {
+                queue.add(node);
+            }
+        }
+
+        List<Node> topoOrder = new ArrayList<>();
+        while (!queue.isEmpty()) {
+            Node node = queue.poll();
+            topoOrder.add(node);
+
+            for (Node neighbor : dag.get(node)) {
+                inDegree.put(neighbor, inDegree.get(neighbor) - 1);
+                if (inDegree.get(neighbor) == 0) {
+                    queue.add(neighbor);
+                }
+            }
+        }
+
+        return topoOrder;
+    }
+    
+    //是否可以满足
+    public boolean is2SATSatisfiable() {
+        List<List<Node>> sccs = findSCCs();
+        Map<Node, Integer> nodeToScc = new HashMap<>();
+
+        for (int i = 0; i < sccs.size(); i++) {
+            for (Node node : sccs.get(i)) {
+                nodeToScc.put(node, i);
+            }
+        }
+
+        for (int i = 0; i < nodes.length; i += 2) {
+            Node varNode = nodes[i];
+            Node notVarNode = nodes[i + 1];
+
+         // 确保节点在 nodeToScc 中有值
+            if (nodeToScc.containsKey(varNode) && nodeToScc.containsKey(notVarNode)) {
+                if (nodeToScc.get(varNode).equals(nodeToScc.get(notVarNode))) {
+                    return false;
+                }
+            }        }
+      
+        //求值
+        /*
+        List<Node> topoOrder = topologicalSortSCCs();
+        Map<Node, Boolean> assignment = new HashMap<>();
+
+        for (Node node : topoOrder) {
+            if (!assignment.containsKey(node) && !assignment.containsKey(node.getOppo())) {
+                assignment.put(node, true);
+                assignment.put(node.getOppo(), false);
+            }
+        }
+
+        for (Node node : nodes) {
+            if (node != null) {
+                node.setValue(assignment.get(node));
+            }
+        }
+       
+
+        return true;
+    }
+    */
     
     
     
     
-    
-    
+    public List<Node> topologicalSortSCCs() {
+        List<Node> topoOrder = new ArrayList<>();
+        int[] inDegree = new int[sccCount];
+        List<Integer>[] dag = new List[sccCount];
+        
+        for (int i = 0; i < sccCount; i++) {
+            dag[i] = new ArrayList<>();
+        }
+
+        for (int i = 0; i < nodes.length; i++) {
+            Node node = nodes[i];
+            if (node != null) {
+                int sccNum = scc[caculateN(node.getNum())];
+                for (Node neighbor : GraphChart[caculateN(node.getNum())]) {
+                    if (neighbor != null) {
+                        int neighborSccNum = scc[caculateN(neighbor.getNum())];
+                        if (sccNum != neighborSccNum && !dag[sccNum].contains(neighborSccNum)) {
+                            dag[sccNum].add(neighborSccNum);
+                            inDegree[neighborSccNum]++;
+                        }
+                    }
+                }
+            }
+        }
+
+        Queue<Integer> queue = new LinkedList<>();
+        for (int i = 0; i < sccCount; i++) {
+            if (inDegree[i] == 0) {
+                queue.add(i);
+            }
+        }
+
+        while (!queue.isEmpty()) {
+            int sccNum = queue.poll();
+            for (Node node : sccs.get(sccNum)) {
+                topoOrder.add(node);
+            }
+            for (int neighborSccNum : dag[sccNum]) {
+                inDegree[neighborSccNum]--;
+                if (inDegree[neighborSccNum] == 0) {
+                    queue.add(neighborSccNum);
+                }
+            }
+        }
+
+        return topoOrder;
+    }
+
+   
     
     
     

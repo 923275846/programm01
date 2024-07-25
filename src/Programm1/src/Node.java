@@ -7,25 +7,25 @@ public class Node {
 	
 	int num;
 	boolean value;
-	List<Node> implicates;
+	//List<Node> implicates;
 	Node oppoNode;
-	List<Node> reachableNodes;
+	//List<Node> reachableNodes;
 	
 	
 	public Node() {}
 	
 	public Node(int n) {
-		implicates=new ArrayList<>();
+		//implicates=new ArrayList<>();
 		num=n;
 	}
 	
-	public void addIm(Node nod) {
+	/*public void addIm(Node nod) {
 		implicates.add(nod);
 	}
 	
 	public List<Node> getIm(){
 		return this.implicates;
-	}
+	}*/
 	
 	public void setNum(int i) {
 		this.num=i;
@@ -54,10 +54,10 @@ public class Node {
 		return oppoNode;
 	}
 	
-	public void setRN(List<Node> rn)
+	/*public void setRN(List<Node> rn)
 	{
 		reachableNodes=rn;
-	}
+	}*/
 	
 	 // 重写 equals 方法，用于比较节点对象是否相等
     @Override
